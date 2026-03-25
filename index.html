@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="골든타임 SOS">
+    <meta name="theme-color" content="#c41c1c">
+    <title>골든타임 SOS</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.svg">
+    <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --red-dark:   #8b0000;
+            --red-main:   #c41c1c;
+            --red-bright: #ef3030;
+            --red-light:  #fee2e2;
+            --amber:      #f59e0b;
+            --green:      #16a34a;
+            --blue:       #1d4ed8;
+            --gray-900:   #0f0f0f;
+            --gray-800:   #1a1a1a;
+            --gray-700:   #2d2d2d;
+            --gray-400:   #9ca3af;
+            --gray-200:   #e5e7eb;
+            --gray-100:   #f3f4f6;
+            --white:      #ffffff;
+            --card-bg:    #ffffff;
+            --body-bg:    #f5f5f5;
+            --text-main:  #111111;
+            --text-sub:   #555555;
+            --radius:     16px;
+            --radius-sm:  10px;
+            --safe-top:   env(safe-area-inset-top, 0px);
+            --safe-bottom:env(safe-area-inset-bottom, 0px);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; overscroll-behavior: none; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--body-bg);
+            color: var(--text-main);
+            min-height: 100dvh;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            background: var(--red-main);
+            padding: calc(var(--safe-top) + 14px) 20px 14px;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 16px rgba(196,28,28,0.4);
+        }
+        .header-title {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 900; font-size: 1.15rem;
+            color: #fff; letter-spacing: -0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .header-title i { font-size: 1rem; }
+        .gps-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem; font-weight: 700;
+            background: rgba(0,0,0,0.25); color: #fff;
+            padding: 4px 10px; border-radius: 20px;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .gps-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        /* ---- NAV ---- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+            background: var(--white);
+            padding: 10px 0 calc(var(--safe-bottom) + 10px);
+            border-top: 1px solid var(--gray-200);
+            display: flex; justify-content: space-around;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+        }
+        .nav-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            background: none; border: none; cursor: pointer;
+            padding: 4px 20px; border-radius: 12px;
+            transition: background 0.15s;
+        }
+        .nav-btn i { font-size: 1.3rem; transition: color 0.2s; }
+        .nav-btn span { font-size: 0.68rem; font-weight: 700; }
+        .nav-btn.active i, .nav-btn.active span { color: var(--red-main); }
+        .nav-btn:not(.active) i, .nav-btn:not(.active) span { color: var(--gray-400); }
+
+        /* ---- SCROLL AREA ---- */
+        .page {
+            display: none;
+            padding-top: calc(var(--safe-top) + 64px);
+            padding-bottom: calc(var(--safe-bottom) + 80px);
+            min-height: 100dvh;
+        }
+        .page.active { display: block; }
+        .page-inner { padding: 20px 16px; max-width: 480px; margin: 0 auto; }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .card-title {
+            font-weight: 700; font-size: 0.95rem;
+            color: var(--text-main);
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 14px;
+        }
+        .card-title i { color: var(--red-main); }
+
+        /* ---- SOS BUTTON ---- */
+        .sos-wrap {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 32px 0 20px;
+        }
+        .sos-hint {
+            font-size: 0.8rem; color: var(--text-sub);
+            margin-bottom: 28px; text-align: center;
+            line-height: 1.6;
+        }
+        .sos-ring {
+            position: relative;
+            width: 210px; height: 210px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .sos-ring::before, .sos-ring::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid var(--red-bright);
+            animation: ring-out 2.4s ease-out infinite;
+        }
+        .sos-ring::before { width: 100%; height: 100%; animation-delay: 0s; }
+        .sos-ring::after  { width: 100%; height: 100%; animation-delay: 1.2s; }
+        @keyframes ring-out {
+            0%   { transform: scale(0.78); opacity: 0.7; }
+            100% { transform: scale(1.15); opacity: 0; }
+        }
+        .sos-btn {
+            width: 166px; height: 166px;
+            background: radial-gradient(circle at 38% 38%, #ff4c4c 0%, var(--red-main) 55%, var(--red-dark) 100%);
+            border: none; border-radius: 50%; cursor: pointer;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+            box-shadow: 0 8px 32px rgba(196,28,28,0.55), inset 0 2px 0 rgba(255,255,255,0.15);
+            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none; -webkit-user-select: none;
+            position: relative; z-index: 1;
+        }
+        .sos-btn:active, .sos-btn.pressing {
+            transform: scale(0.93);
+            box-shadow: 0 4px 16px rgba(196,28,28,0.5);
+        }
+        .sos-btn i { font-size: 2.8rem; color: #fff; pointer-events: none; }
+        .sos-btn-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem; font-weight: 700;
+            color: #fff; letter-spacing: 4px;
+            pointer-events: none;
+        }
+        .sos-btn-sub {
+            font-size: 0.6rem; color: rgba(255,255,255,0.75);
+            font-weight: 500; pointer-events: none;
+        }
+
+        /* Hold progress bar */
+        .hold-bar-wrap {
+            width: 166px; height: 6px;
+            background: var(--gray-200); border-radius: 3px;
+            margin-top: 18px; overflow: hidden;
+        }
+        .hold-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--red-main), var(--red-bright));
+            border-radius: 3px;
+            transition: width 0.05s linear;
+        }
+
+        /* ---- LOCATION ---- */
+        .loc-coords {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.72rem; color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+        .loc-address {
+            font-weight: 700; font-size: 0.95rem;
+            color: var(--text-main); margin-bottom: 12px;
+        }
+        .mini-map {
+            width: 100%; height: 110px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
+        }
+        .mini-map .grid-lines {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .pin-dot {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .ping-circle {
+            position: absolute;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(239,48,48,0.25);
+            animation: ping-anim 1.8s ease-out infinite;
+        }
+        @keyframes ping-anim {
+            0%   { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .pin-icon { font-size: 1.8rem; color: var(--red-main); position: relative; z-index: 1; }
+
+        /* ---- AED LIST ---- */
+        .aed-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        .aed-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .aed-name { font-weight: 700; font-size: 0.9rem; }
+        .aed-sub  { font-size: 0.75rem; color: var(--text-sub); margin-top: 2px; }
+        .aed-dist {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem; font-weight: 700;
+            color: var(--red-main); white-space: nowrap;
+            background: var(--red-light);
+            padding: 4px 10px; border-radius: 20px;
+        }
+
+        /* ---- PROFILE FORM ---- */
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block; font-size: 0.78rem; font-weight: 700;
+            color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px 14px;
+            border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+            background: var(--gray-100); color: var(--text-main);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.9rem; outline: none;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--red-main); background: #fff;
+        }
+        .form-textarea { resize: none; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .section-title {
+            font-weight: 900; font-size: 1.1rem;
+            color: var(--text-main); margin: 24px 0 14px;
+            padding-left: 10px;
+            border-left: 4px solid var(--red-main);
+        }
+
+        /* ---- BLOOD TYPE PILLS ---- */
+        .blood-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+        .blood-pill {
+            padding: 8px 16px; border-radius: 20px;
+            border: 1.5px solid var(--gray-200); background: var(--gray-100);
+            font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            transition: all 0.15s; color: var(--text-sub);
+        }
+        .blood-pill.selected {
+            background: var(--red-main); color: #fff;
+            border-color: var(--red-main);
+        }
+
+        /* ---- SAVE BUTTON ---- */
+        .save-btn {
+            width: 100%; padding: 16px;
+            background: var(--red-main); color: #fff;
+            border: none; border-radius: var(--radius);
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 1rem; font-weight: 900;
+            cursor: pointer; letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(196,28,28,0.35);
+            transition: background 0.15s, transform 0.1s;
+            margin-top: 8px;
+        }
+        .save-btn:active { transform: scale(0.97); }
+
+        /* ---- MODAL ---- */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            padding: 24px;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #fff; border-radius: 24px;
+            width: 100%; max-width: 360px;
+            padding: 32px 28px;
+            text-align: center;
+            animation: modal-in 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes modal-in {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+        .modal-icon {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: var(--red-light); color: var(--red-main);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin: 0 auto 20px;
+        }
+        .modal-title {
+            font-size: 1.4rem; font-weight: 900;
+            color: var(--red-main); margin-bottom: 18px;
+        }
+        .modal-body {
+            text-align: left; background: var(--gray-100);
+            border-radius: var(--radius-sm); padding: 16px;
+            font-size: 0.82rem; line-height: 1.8;
+            color: var(--text-main); margin-bottom: 20px;
+        }
+        .modal-body strong { color: var(--text-sub); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .modal-close {
+            width: 100%; padding: 14px;
+            background: none; border: none;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.9rem; font-weight: 700;
+            color: var(--text-sub); cursor: pointer;
+            border-top: 1px solid var(--gray-200); padding-top: 16px;
+        }
+
+        /* ---- TOAST ---- */
+        .toast {
+            position: fixed; bottom: calc(var(--safe-bottom) + 90px);
+            left: 50%; transform: translateX(-50%) translateY(10px);
+            background: var(--gray-800); color: #fff;
+            padding: 10px 22px; border-radius: 30px;
+            font-size: 0.83rem; font-weight: 600;
+            white-space: nowrap; pointer-events: none;
+            opacity: 0; transition: opacity 0.25s, transform 0.25s; z-index: 999;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ---- EMERGENCY NUMBERS ---- */
+        .quick-call-row {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+            margin-bottom: 16px;
+        }
+        .quick-call-btn {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+            padding: 14px 8px;
+            border-radius: var(--radius-sm);
+            border: none; cursor: pointer;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 700; font-size: 0.75rem;
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-decoration: none;
+        }
+        .quick-call-btn:active { transform: scale(0.95); }
+        .quick-call-btn i { font-size: 1.4rem; }
+        .qc-red   { background: var(--red-light); color: var(--red-main); }
+        .qc-blue  { background: #dbeafe; color: var(--blue); }
+        .qc-amber { background: #fef3c7; color: #92400e; }
+
+        /* ---- INSTALL BANNER ---- */
+        .install-banner {
+            background: linear-gradient(135deg, var(--red-main), var(--red-dark));
+            color: #fff; border-radius: var(--radius); padding: 16px 18px;
+            margin-bottom: 16px; display: flex;
+            align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .install-banner-text { font-size: 0.83rem; line-height: 1.5; flex: 1; }
+        .install-banner-text strong { display: block; font-weight: 900; font-size: 0.9rem; }
+        .install-btn {
+            background: #fff; color: var(--red-main);
+            border: none; border-radius: 20px;
+            padding: 8px 16px; font-weight: 900; font-size: 0.8rem;
+            cursor: pointer; white-space: nowrap;
+        }
+        .banner-close {
+            background: none; border: none; color: rgba(255,255,255,0.7);
+            font-size: 1.1rem; cursor: pointer; padding: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="header-title">
+        <i class="fas fa-heartbeat"></i>
+        골든타임 SOS
+    </div>
+    <div class="gps-badge">
+        <div class="gps-dot"></div>
+        GPS 수신중
+    </div>
+</header>
+
+<!-- HOME PAGE -->
+<section id="page-home" class="page active">
+    <div class="page-inner">
+
+        <!-- PWA Install Banner -->
+        <div class="install-banner" id="install-banner">
+            <div class="install-banner-text">
+                <strong>📲 앱으로 설치하기</strong>
+                홈 화면에 추가하면 오프라인에서도 사용 가능합니다
+            </div>
+            <button class="install-btn" id="install-btn" onclick="promptInstall()">설치</button>
+            <button class="banner-close" onclick="hideBanner()"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- Quick Calls -->
+        <div class="quick-call-row">
+            <a href="tel:119" class="quick-call-btn qc-red">
+                <i class="fas fa-ambulance"></i>119 구급
+            </a>
+            <a href="tel:112" class="quick-call-btn qc-blue">
+                <i class="fas fa-shield-alt"></i>112 경찰
+            </a>
+            <a href="tel:1339" class="quick-call-btn qc-amber">
+                <i class="fas fa-stethoscope"></i>1339 의료
+            </a>
+        </div>
+
+        <!-- SOS Button -->
+        <div class="sos-wrap">
+            <p class="sos-hint">
+                위급 상황 시 버튼을 <strong>길게</strong> 누르세요<br>
+                <span style="font-size:0.72rem;color:var(--gray-400)">1.5초 이상 → 자동 발송</span>
+            </p>
+            <div class="sos-ring">
+                <button class="sos-btn" id="sos-btn"
+                    onmousedown="startHold(event)" onmouseup="endHold()"
+                    ontouchstart="startHold(event)" ontouchend="endHold()"
+                    oncontextmenu="return false">
+                    <i class="fas fa-bell"></i>
+                    <span class="sos-btn-label">SOS</span>
+                    <span class="sos-btn-sub">길게 눌러 발송</span>
+                </button>
+            </div>
+            <div class="hold-bar-wrap">
+                <div class="hold-bar" id="hold-bar"></div>
+            </div>
+        </div>
+
+        <!-- Location -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-location-dot"></i> 현재 위치
+            </div>
+            <p class="loc-coords" id="loc-coords">위치 권한을 허용해주세요</p>
+            <p class="loc-address" id="loc-address">주소 확인 중...</p>
+            <div class="mini-map">
+                <div class="grid-lines"></div>
+                <div class="pin-dot">
+                    <div class="ping-circle"></div>
+                    <i class="fas fa-map-pin pin-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nearby AED -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-bolt"></i> 주변 AED 위치
+            </div>
+            <div id="aed-list">
+                <div class="aed-item">
+                    <div>
+                        <div class="aed-name">강남역 2번 출구</div>
+                        <div class="aed-sub">지하 1층 고객센터 옆</div>
+                    </div>
+                    <span class="aed-dist">120m</span>
+                </div>
+                <div class="aed-item">
+                    <div>
+                        <div class="aed-name">서초빌딩 로비</div>
+                        <div class="aed-sub">정문 안내 데스크</div>
+                    </div>
+                    <span class="aed-dist">350m</span>
+                </div>
+                <div class="aed-item">
+                    <div>
+                        <div class="aed-name">강남 세브란스병원</div>
+                        <div class="aed-sub">응급실 입구</div>
+                    </div>
+                    <span class="aed-dist">640m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROFILE PAGE -->
+<section id="page-profile" class="page">
+    <div class="page-inner">
+        <p class="section-title">내 의료 정보</p>
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label">성명</label>
+                <input type="text" id="f-name" class="form-input" placeholder="홍길동">
+            </div>
+            <div class="form-group">
+                <label class="form-label">혈액형</label>
+                <div class="blood-pills">
+                    <button class="blood-pill" data-blood="A형">A형</button>
+                    <button class="blood-pill" data-blood="B형">B형</button>
+                    <button class="blood-pill" data-blood="O형">O형</button>
+                    <button class="blood-pill" data-blood="AB형">AB형</button>
+                    <button class="blood-pill" data-blood="Rh+">Rh+</button>
+                    <button class="blood-pill" data-blood="Rh-">Rh-</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">기저질환 / 지병</label>
+                <textarea id="f-diseases" class="form-textarea" rows="2" placeholder="예: 당뇨, 고혈압, 천식 등"></textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">알레르기</label>
+                <textarea id="f-allergies" class="form-textarea" rows="2" placeholder="예: 복숭아, 페니실린 등"></textarea>
+            </div>
+        </div>
+
+        <p class="section-title">보호자 연락처</p>
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label">보호자 성함</label>
+                <input type="text" id="f-guardian-name" class="form-input" placeholder="부모님 / 배우자">
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">전화번호</label>
+                <input type="tel" id="f-guardian-phone" class="form-input" placeholder="010-0000-0000">
+            </div>
+        </div>
+
+        <button class="save-btn" onclick="saveProfile()">
+            <i class="fas fa-save" style="margin-right:8px"></i>저장하기
+        </button>
+    </div>
+</section>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="switchPage('home')">
+        <i class="fas fa-house-chimney"></i>
+        <span>홈/SOS</span>
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="switchPage('profile')">
+        <i class="fas fa-user-nurse"></i>
+        <span>내 정보</span>
+    </button>
+</nav>
+
+<!-- SOS MODAL -->
+<div class="modal-overlay" id="sos-modal">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="modal-title">📡 응급 신호 전송됨</div>
+        <div class="modal-body">
+            <strong>발송 대상</strong><br>
+            🚑 119 긴급 구조 센터<br>
+            <span id="m-guardian"></span>
+            <br><strong>전송 메시지</strong><br>
+            <span id="m-msg"></span>
+        </div>
+        <button class="modal-close" onclick="closeModal()">닫기</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const KEY = 'sos_app_v2';
+let data = JSON.parse(localStorage.getItem(KEY)) || {
+    name:'', bloodArr:['A형','Rh+'],
+    diseases:'', allergies:'',
+    guardianName:'', guardianPhone:''
+};
+let coords = { lat: 37.4979, lng: 127.0276 };
+let deferredPrompt = null;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+    loadProfile();
+    fetchLocation();
+    setInterval(fetchLocation, 30000);
+    registerSW();
+
+    // Hide install banner if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        document.getElementById('install-banner').style.display = 'none';
+    }
+});
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+});
+
+function promptInstall() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+        hideBanner();
+    } else {
+        showToast('브라우저 메뉴 → "홈 화면에 추가"를 눌러주세요');
+    }
+}
+function hideBanner() {
+    document.getElementById('install-banner').style.display = 'none';
+}
+
+// ── Service Worker ─────────────────────────────────────────────────────────────
+function registerSW() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function switchPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('nav-' + page).classList.add('active');
+}
+
+// ── Location ──────────────────────────────────────────────────────────────────
+function fetchLocation() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(pos => {
+        coords.lat = pos.coords.latitude;
+        coords.lng = pos.coords.longitude;
+        document.getElementById('loc-coords').textContent =
+            `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`;
+        document.getElementById('loc-address').textContent = '현재 위치 수신됨';
+    }, () => {
+        document.getElementById('loc-coords').textContent = 'GPS 비활성화';
+        document.getElementById('loc-address').textContent = '기본 좌표 사용 중';
+    });
+}
+
+// ── Profile ───────────────────────────────────────────────────────────────────
+function loadProfile() {
+    document.getElementById('f-name').value = data.name;
+    document.getElementById('f-diseases').value = data.diseases;
+    document.getElementById('f-allergies').value = data.allergies;
+    document.getElementById('f-guardian-name').value = data.guardianName;
+    document.getElementById('f-guardian-phone').value = data.guardianPhone;
+    // Blood pills
+    document.querySelectorAll('.blood-pill').forEach(pill => {
+        pill.classList.toggle('selected', data.bloodArr.includes(pill.dataset.blood));
+    });
+}
+
+document.querySelectorAll('.blood-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+        const b = pill.dataset.blood;
+        // Toggle group: blood type (A/B/O/AB) vs Rh
+        const isRh = b.startsWith('Rh');
+        if (pill.classList.contains('selected')) {
+            pill.classList.remove('selected');
+            data.bloodArr = data.bloodArr.filter(x => x !== b);
+        } else {
+            // Deselect others in same group
+            document.querySelectorAll('.blood-pill').forEach(p => {
+                const same = p.dataset.blood.startsWith('Rh') === isRh;
+                if (same && p !== pill) p.classList.remove('selected');
+            });
+            data.bloodArr = data.bloodArr.filter(x => x.startsWith('Rh') !== isRh);
+            pill.classList.add('selected');
+            data.bloodArr.push(b);
+        }
+    });
+});
+
+function saveProfile() {
+    data.name = document.getElementById('f-name').value.trim();
+    data.diseases = document.getElementById('f-diseases').value.trim();
+    data.allergies = document.getElementById('f-allergies').value.trim();
+    data.guardianName = document.getElementById('f-guardian-name').value.trim();
+    data.guardianPhone = document.getElementById('f-guardian-phone').value.trim();
+    localStorage.setItem(KEY, JSON.stringify(data));
+    showToast('✅ 의료 정보가 저장되었습니다');
+}
+
+// ── SOS Hold Button ──────────────────────────────────────────────────────────
+let holdTimer = null;
+let holdInterval = null;
+let holdProgress = 0;
+const HOLD_MS = 1500;
+
+function startHold(e) {
+    e.preventDefault();
+    const btn = document.getElementById('sos-btn');
+    const bar = document.getElementById('hold-bar');
+    btn.classList.add('pressing');
+    holdProgress = 0;
+    bar.style.width = '0%';
+    holdInterval = setInterval(() => {
+        holdProgress += 50;
+        bar.style.width = Math.min((holdProgress / HOLD_MS) * 100, 100) + '%';
+    }, 50);
+    holdTimer = setTimeout(() => {
+        endHold();
+        triggerSOS();
+    }, HOLD_MS);
+}
+
+function endHold() {
+    clearTimeout(holdTimer);
+    clearInterval(holdInterval);
+    document.getElementById('sos-btn').classList.remove('pressing');
+    document.getElementById('hold-bar').style.width = '0%';
+    holdProgress = 0;
+}
+
+function triggerSOS() {
+    if (!data.guardianPhone) {
+        showToast('⚠️ 내 정보 탭에서 보호자 연락처를 먼저 등록해주세요');
+        setTimeout(() => switchPage('profile'), 800);
+        return;
+    }
+    const mapUrl = `https://maps.google.com/?q=${coords.lat},${coords.lng}`;
+    const blood = data.bloodArr.join('/') || '미등록';
+    const msg = `[긴급구조] ${data.name || '이름미등록'}님 응급상황!\n` +
+                `📍위치: ${mapUrl}\n` +
+                `🩸혈액형: ${blood} | 질환: ${data.diseases || '없음'} | 알러지: ${data.allergies || '없음'}`;
+
+    document.getElementById('m-guardian').textContent =
+        `👨‍👩‍👧 보호자: ${data.guardianName} (${data.guardianPhone})`;
+    document.getElementById('m-msg').textContent = msg;
+    document.getElementById('sos-modal').classList.add('open');
+
+    // Vibrate if supported
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+
+    // Open dialer to 119
+    setTimeout(() => { window.location.href = 'tel:119'; }, 600);
+}
+
+function closeModal() {
+    document.getElementById('sos-modal').classList.remove('open');
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

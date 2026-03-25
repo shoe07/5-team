@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="42" fill="#c41c1c"/>
+  <!-- Heartbeat line -->
+  <path d="M20 96 L55 96 L65 60 L80 130 L95 70 L108 110 L120 96 L172 96"
+        stroke="white" stroke-width="9" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
